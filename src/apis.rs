@@ -64,24 +64,44 @@ impl Apod {
         }
     }
 
-    pub fn get_apod_data_blocking() -> Result<Self, NetworkError> {
-        match reqwest::blocking::get(Parser::default().apod_url().replace("\"", "")) {
-            // .replace to get rid of the extra quotes from the URL
-            Ok(r) => match json::parse(r.text().unwrap().as_str()) {
-                Ok(json_obj) => Ok(Self {
-                    copyright: json_obj["copyright"].to_string(),
-                    date: json_obj["date"].to_string(),
-                    explanation: json_obj["explanation"].to_string(),
-                    hdurl: json_obj["hdurl"].to_string(),
-                    media_type: json_obj["media_type"].to_string(),
-                    service_version: json_obj["service_version"].to_string(),
-                    title: json_obj["title"].to_string(),
-                    url: json_obj["url"].to_string(),
-                }),
-                Err(e) => return Err(NetworkError::JsonParseFailed(e)),
-            },
-            Err(e) => return Err(NetworkError::ConnectionFailed(e)),
-        }
+    /// Get apod data (blocking)
+    // pub fn get_apod_data_blocking() -> Result<Self, NetworkError> {
+    //     match reqwest::blocking::get(Parser::default().apod_url().replace("\"", "")) {
+    //         // .replace to get rid of the extra quotes from the URL
+    //         Ok(r) => match json::parse(r.text().unwrap().as_str()) {
+    //             Ok(json_obj) => Ok(Self {
+    //                 copyright: json_obj["copyright"].to_string(),
+    //                 date: json_obj["date"].to_string(),
+    //                 explanation: json_obj["explanation"].to_string(),
+    //                 hdurl: json_obj["hdurl"].to_string(),
+    //                 media_type: json_obj["media_type"].to_string(),
+    //                 service_version: json_obj["service_version"].to_string(),
+    //                 title: json_obj["title"].to_string(),
+    //                 url: json_obj["url"].to_string(),
+    //             }),
+    //             Err(e) => return Err(NetworkError::JsonParseFailed(e)),
+    //         },
+    //         Err(e) => return Err(NetworkError::ConnectionFailed(e)),
+    //     }
+    // }
+
+    /// Get APOD data (async)
+    pub async fn get_apod_data() -> Result<Self, NetworkError>
+    {
+        println!("{}", Parser::default().apod_url());
+        let res = reqwest::get(Parser::default().apod_url()).await?;
+        let json_data = json::parse(res.text().await.unwrap().to_string().as_ref())?;
+        dbg!(&json_data);
+        Ok(Self {
+            copyright: json_data["copyright"].to_string(),
+            date: json_data["date"].to_string(),
+            explanation: json_data["explanation"].to_string(),
+            hdurl: json_data["hdurl"].to_string(),
+            media_type: json_data["media_type"].to_string(),
+            service_version: json_data["service_version"].to_string(),
+            title: json_data["title"].to_string(),
+            url: json_data["url"].to_string(),
+        })
     }
 }
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -181,7 +201,7 @@ impl NEOFeed {
         }
     }
 
-    // Retrieve a list of Near Earth Objects from NASA and return a result with the list or error
+    /// Retrieve a list of Near Earth Objects from NASA and return a result with the list or error
     pub fn get_neows_feed_blocking(&mut self, date: &str) -> Result<&mut NEOFeed, NetworkError> {
         match reqwest::blocking::get(Parser::default().neows_url(date).replace("\"", "")) {
             Ok(r) => match json::parse(r.text().unwrap().as_str()) {
@@ -265,6 +285,11 @@ impl NEOFeed {
             Err(e) => return Err(NetworkError::ConnectionFailed(e)),
         }
     }
+
+    // Get Near Earth Objects feed from NASA (async)
+    // pub async fn get_neows_feed() -> Result<Self, NetworkError> {
+    // TODO: Implement async version of get_neows_feed_blocking()
+    // }
 }
 
 impl Default for NEOFeed {

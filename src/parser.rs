@@ -16,7 +16,7 @@ impl Default for Parser {
             urls: Urls::default(),
             key: {
                 // println!("{}", Self::read_key_file(fs::File::open("secret.json").unwrap()).unwrap());
-                Self::read_key_file(fs::File::open("secret.json").unwrap()).unwrap()
+                Self::read_key_file(fs::File::open("secret.json").unwrap()).unwrap().replace("\"", "")
             },
         }
     }
@@ -87,6 +87,9 @@ mod tests {
 
     #[test]
     fn test_neows_url() {
-        assert_eq!(Parser::new(String::from("DEMO_KEY")).neows_url("2020-10-10"), "https://api.nasa.gov/neo/rest/v1/feed?start_date=2020-10-10&end_date=2020-10-10&api_key=DEMO_KEY");
+        assert_eq!(
+            Parser::new(String::from("DEMO_KEY")).neows_url("2020-10-10"),
+            "https://api.nasa.gov/neo/rest/v1/feed?start_date=2020-10-10&end_date=2020-10-10&api_key=DEMO_KEY"
+        );
     }
 }
